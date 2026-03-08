@@ -19,6 +19,27 @@ function toggleNotificationDays() {
   notifyDaysBefore.disabled = !notifyCheckbox.checked;
 }
 
+function applySubscriptionTypePreset() {
+  const type = document.querySelector('#subscription_type')?.value;
+  const cycle = document.querySelector('#cycle');
+  const frequency = document.querySelector('#frequency');
+  const notes = document.querySelector('#notes');
+
+  if (!type) return;
+
+  if (type === 'esim') {
+    if (cycle) cycle.value = '3'; // monthly
+    if (frequency) frequency.value = '1';
+    if (notes && !notes.value) notes.value = 'Type: eSIM';
+  }
+
+  if (type === 'vps') {
+    if (cycle) cycle.value = '3';
+    if (frequency) frequency.value = '1';
+    if (notes && !notes.value) notes.value = 'Type: VPS';
+  }
+}
+
 function resetForm() {
   const id = document.querySelector("#id");
   id.value = "";
@@ -45,6 +66,10 @@ function resetForm() {
   replacementSubscription.classList.add("hide");
   const form = document.querySelector("#subs-form");
   form.reset();
+  const subscriptionType = document.querySelector("#subscription_type");
+  if (subscriptionType) {
+    subscriptionType.value = "general";
+  }
   closeLogoSearch();
   const deleteButton = document.querySelector("#deletesub");
   deleteButton.style = 'display: none';
@@ -79,6 +104,17 @@ function fillEditFormFields(subscription) {
   paymentSelect.value = subscription.payment_method_id;
   const categorySelect = document.querySelector("#category");
   categorySelect.value = subscription.category_id;
+  const subscriptionType = document.querySelector("#subscription_type");
+  if (subscriptionType) subscriptionType.value = subscription.subscription_type || "general";
+  const provider = document.querySelector("#provider");
+  if (provider) provider.value = subscription.provider || "";
+  const region = document.querySelector("#region");
+  if (region) region.value = subscription.region || "";
+  const externalId = document.querySelector("#external_id");
+  if (externalId) externalId.value = subscription.external_id || "";
+  const planDetails = document.querySelector("#plan_details");
+  if (planDetails) planDetails.value = subscription.plan_details || "";
+
   const payerSelect = document.querySelector("#payer_user");
   payerSelect.value = subscription.payer_user_id;
 
@@ -524,6 +560,57 @@ document.addEventListener('DOMContentLoaded', function () {
       submitFormData(formData, submitButton, endpoint);
     }
   });
+
+  const importForm = document.querySelector('#import-csv-form');
+  if (importForm) {
+    importForm.addEventListener('submit', function (e) {
+      e.preventDefault();
+      const fd = new FormData(importForm);
+      fetch('endpoints/subscription/import_csv.php', {
+        method: 'POST',
+        headers: {
+          'X-CSRF-Token': window.csrfToken,
+        },
+        body: fd
+      })
+        .then((r) => r.json())
+        .then((data) => {
+          if (data.status === 'Success') {
+            showSuccessMessage(data.message);
+            fetchSubscriptions(null, null, 'import');
+            importForm.reset();
+          } else {
+            showErrorMessage(data.message || translate('error'));
+          }
+        })
+        .catch(() => showErrorMessage(translate('unknown_error')));
+    });
+  }
+
+  const bulkForm = document.querySelector('#bulk-update-form');
+  if (bulkForm) {
+    bulkForm.addEventListener('submit', function (e) {
+      e.preventDefault();
+      const fd = new FormData(bulkForm);
+      fetch('endpoints/subscription/bulk_update.php', {
+        method: 'POST',
+        headers: {
+          'X-CSRF-Token': window.csrfToken,
+        },
+        body: fd
+      })
+        .then((r) => r.json())
+        .then((data) => {
+          if (data.status === 'Success') {
+            showSuccessMessage(data.message);
+            fetchSubscriptions(null, null, 'bulk');
+          } else {
+            showErrorMessage(data.message || translate('error'));
+          }
+        })
+        .catch(() => showErrorMessage(translate('unknown_error')));
+    });
+  }
 
   document.addEventListener('mousedown', function (event) {
     const sortOptions = document.querySelector('#sort-options');

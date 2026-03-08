@@ -27,6 +27,11 @@ if (isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
             $subscriptionData['payment_method_id'] = $row['payment_method_id'];
             $subscriptionData['payer_user_id'] = $row['payer_user_id'];
             $subscriptionData['category_id'] = $row['category_id'];
+            $subscriptionData['subscription_type'] = $row['subscription_type'] ?? 'general';
+            $subscriptionData['provider'] = htmlspecialchars_decode($row['provider'] ?? "");
+            $subscriptionData['region'] = htmlspecialchars_decode($row['region'] ?? "");
+            $subscriptionData['external_id'] = htmlspecialchars_decode($row['external_id'] ?? "");
+            $subscriptionData['plan_details'] = htmlspecialchars_decode($row['plan_details'] ?? "");
             $subscriptionData['notify'] = $row['notify'];
             $subscriptionData['inactive'] = $row['inactive'];
             $subscriptionData['url'] = htmlspecialchars_decode($row['url'] ?? "");

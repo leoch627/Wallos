@@ -227,6 +227,11 @@ $startDate = $_POST["start_date"];
 $paymentMethodId = $_POST["payment_method_id"];
 $payerUserId = $_POST["payer_user_id"];
 $categoryId = $_POST['category_id'];
+$subscriptionType = validate($_POST['subscription_type'] ?? 'general');
+$provider = validate($_POST['provider'] ?? '');
+$region = validate($_POST['region'] ?? '');
+$externalId = validate($_POST['external_id'] ?? '');
+$planDetails = validate($_POST['plan_details'] ?? '');
 $notes = validate($_POST["notes"]);
 $url = validate($_POST['url']);
 $logoUrl = validate($_POST['logo-url']);
@@ -257,14 +262,14 @@ if ($logoUrl !== "") {
 if (!$isEdit) {
     $sql = "INSERT INTO subscriptions (
                         name, logo, price, currency_id, next_payment, cycle, frequency, notes, 
-                        payment_method_id, payer_user_id, category_id, notify, inactive, url, 
+                        payment_method_id, payer_user_id, category_id, notify, inactive, url,
                         notify_days_before, user_id, cancellation_date, replacement_subscription_id,
-                        auto_renew, start_date
+                        auto_renew, start_date, subscription_type, provider, region, external_id, plan_details
                     ) VALUES (
-                        :name, :logo, :price, :currencyId, :nextPayment, :cycle, :frequency, :notes, 
-                        :paymentMethodId, :payerUserId, :categoryId, :notify, :inactive, :url, 
+                        :name, :logo, :price, :currencyId, :nextPayment, :cycle, :frequency, :notes,
+                        :paymentMethodId, :payerUserId, :categoryId, :notify, :inactive, :url,
                         :notifyDaysBefore, :userId, :cancellationDate, :replacement_subscription_id,
-                        :autoRenew, :startDate
+                        :autoRenew, :startDate, :subscriptionType, :provider, :region, :externalId, :planDetails
                     )";
 } else {
     $id = $_POST['id'];
@@ -285,8 +290,13 @@ if (!$isEdit) {
                         inactive = :inactive, 
                         url = :url, 
                         notify_days_before = :notifyDaysBefore, 
-                        cancellation_date = :cancellationDate, 
-                        replacement_subscription_id = :replacement_subscription_id";
+                        cancellation_date = :cancellationDate,
+                        replacement_subscription_id = :replacement_subscription_id,
+                        subscription_type = :subscriptionType,
+                        provider = :provider,
+                        region = :region,
+                        external_id = :externalId,
+                        plan_details = :planDetails";
 
     if ($logo != "") {
         $sql .= ", logo = :logo";
@@ -316,6 +326,11 @@ $stmt->bindParam(':inactive', $inactive, SQLITE3_INTEGER);
 $stmt->bindParam(':url', $url, SQLITE3_TEXT);
 $stmt->bindParam(':notifyDaysBefore', $notifyDaysBefore, SQLITE3_INTEGER);
 $stmt->bindParam(':cancellationDate', $cancellationDate, SQLITE3_TEXT);
+$stmt->bindParam(':subscriptionType', $subscriptionType, SQLITE3_TEXT);
+$stmt->bindParam(':provider', $provider, SQLITE3_TEXT);
+$stmt->bindParam(':region', $region, SQLITE3_TEXT);
+$stmt->bindParam(':externalId', $externalId, SQLITE3_TEXT);
+$stmt->bindParam(':planDetails', $planDetails, SQLITE3_TEXT);
 if ($isEdit) {
     $stmt->bindParam(':id', $id, SQLITE3_INTEGER);
 }

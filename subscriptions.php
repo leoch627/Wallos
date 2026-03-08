@@ -211,6 +211,59 @@ $headerClass = count($subscriptions) > 0 ? "main-actions" : "main-actions hidden
       </div>
     </div>
   </header>
+
+  <div class="card" style="margin: 12px 0; padding: 12px; border-radius: 8px; border: 1px solid var(--colorBorder, #ddd);">
+    <h4 style="margin: 0 0 10px 0;">Bulk tools (eSIM/VPS)</h4>
+    <div class="inline" style="gap:12px; flex-wrap: wrap; align-items: end;">
+      <form id="import-csv-form" enctype="multipart/form-data" class="inline" style="gap:8px; flex-wrap:wrap;">
+        <input type="file" name="csv_file" id="csv_file" accept=".csv" required>
+        <select name="mode" id="import_mode">
+          <option value="skip">Import mode: Skip duplicates</option>
+          <option value="update">Import mode: Update duplicates</option>
+        </select>
+        <select name="default_subscription_type" id="default_subscription_type">
+          <option value="general">Default type: General</option>
+          <option value="esim">Default type: eSIM</option>
+          <option value="vps">Default type: VPS</option>
+        </select>
+        <button class="button secondary-button" type="submit">Import CSV</button>
+      </form>
+
+      <form id="bulk-update-form" class="inline" style="gap:8px; flex-wrap:wrap;">
+        <select name="filter_type" id="bulk_filter_type">
+          <option value="">Filter type: All</option>
+          <option value="general">General</option>
+          <option value="esim">eSIM</option>
+          <option value="vps">VPS</option>
+        </select>
+        <input type="text" name="filter_provider" id="bulk_filter_provider" placeholder="Filter provider (optional)">
+        <select name="set_notify_days_before" id="bulk_notify_days">
+          <option value="">Set reminder: no change</option>
+          <option value="-1">Use default reminder</option>
+          <option value="0">On due date</option>
+          <option value="1">1 day before</option>
+          <option value="3">3 days before</option>
+          <option value="7">7 days before</option>
+          <option value="14">14 days before</option>
+        </select>
+        <select name="set_auto_renew" id="bulk_auto_renew">
+          <option value="">Set renewal: no change</option>
+          <option value="1">Auto renew ON</option>
+          <option value="0">Auto renew OFF</option>
+        </select>
+        <select name="set_category_id" id="bulk_category_id">
+          <option value="">Set category: no change</option>
+          <?php foreach ($categories as $category) { ?>
+            <option value="<?= $category['id'] ?>"><?= $category['name'] ?></option>
+          <?php } ?>
+        </select>
+        <input type="text" name="append_tag" id="bulk_append_tag" placeholder="Append tag to notes (without #)">
+        <button class="button secondary-button" type="submit">Apply Bulk Update</button>
+      </form>
+    </div>
+    <small style="display:block; margin-top:8px; opacity:0.8;">CSV headers supported: name, price, currency_id, next_payment, cycle, frequency, provider, type/subscription_type, region, external_id, plan_details, notes, url, auto_renew, notify_days_before, category_id.</small>
+  </div>
+
   <div class="subscriptions" id="subscriptions">
     <?php
     $formatter = new IntlDateFormatter(
@@ -455,6 +508,41 @@ $headerClass = count($subscriptions) > 0 ? "main-actions" : "main-actions hidden
         }
         ?>
       </select>
+    </div>
+
+    <div class="form-group">
+      <label for="subscription_type">Type</label>
+      <select id="subscription_type" name="subscription_type" onchange="applySubscriptionTypePreset()">
+        <option value="general">General</option>
+        <option value="esim">eSIM</option>
+        <option value="vps">VPS</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <div class="inline">
+        <div class="split50">
+          <label for="provider">Provider</label>
+          <input type="text" id="provider" name="provider" autocomplete="off" placeholder="Airalo / Vultr / Hetzner...">
+        </div>
+        <div class="split50">
+          <label for="region">Region</label>
+          <input type="text" id="region" name="region" autocomplete="off" placeholder="HK / JP / DE / US...">
+        </div>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <div class="inline">
+        <div class="split50">
+          <label for="external_id">Line/Instance ID</label>
+          <input type="text" id="external_id" name="external_id" autocomplete="off" placeholder="ICCID / VM ID / Order ID">
+        </div>
+        <div class="split50">
+          <label for="plan_details">Plan details</label>
+          <input type="text" id="plan_details" name="plan_details" autocomplete="off" placeholder="5GB/30d or 2vCPU/4GB/80GB">
+        </div>
+      </div>
     </div>
 
     <div class="form-group-inline grow">

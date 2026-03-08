@@ -59,6 +59,9 @@ Wallos is a powerful, open-source, and self-hostable web application designed to
 - Multi Language support.
 - OIDC with OAuth
 - AI Recommendations with ChatGPT, Gemini or Local Ollama
+- Bulk CSV Import: Import many subscriptions at once (with duplicate handling: skip or update).
+- eSIM/VPS Fields: Track provider, region, line/instance ID, plan details, and subscription type presets.
+- Bulk Update Tools: Update reminders/category/renewal mode and append tags across many subscriptions.
 
 ## Demo
 
@@ -187,6 +190,24 @@ On the first time you run wallos a user account must be created.
 Go to settings and personalise your Avatar and add members of your household. While there add / remove any categories and currencies.  
 Get a free API Key from [Fixer](https://fixer.io/#pricing_plan) and add it in the settings.  
 If you want to trigger an Update of the exchange rates, change your main currency after adding the API Key, and then change it back to your preferred one.  
+
+### Bulk tools (CSV + eSIM/VPS)
+
+On the Subscriptions page, a **Bulk tools** panel is available.
+
+- **CSV Import** supports these headers (case-insensitive):
+  - `name`, `price`, `currency_id`, `next_payment`, `cycle`, `frequency`
+  - `provider`, `type` / `subscription_type`, `region`, `external_id`, `plan_details`
+  - `notes`, `url`, `auto_renew`, `notify_days_before`, `category_id`
+- Duplicate handling modes:
+  - **Skip duplicates** (keep existing records)
+  - **Update duplicates** (match by `name + provider` for the current user)
+- **Bulk update** can change reminder days, category, renewal mode, and append a note tag across filtered records.
+
+Type presets are included in the subscription form:
+- `General`
+- `eSIM`
+- `VPS`
 
 ## Screenshots
 
