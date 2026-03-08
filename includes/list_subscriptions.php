@@ -228,7 +228,10 @@ function printSubscriptions($subscriptions, $sort, $categories, $members, $i18n,
 
             <div class="subscription<?= $subscriptionExtraClasses ?>"
                 onClick="toggleOpenSubscription(<?= $subscription['id'] ?>)" data-id="<?= $subscription['id'] ?>"
-                data-name="<?= $subscription['name'] ?>">
+                data-name="<?= $subscription['name'] ?>"
+                data-external-id="<?= htmlspecialchars($subscription['external_id'] ?? '') ?>"
+                data-subscription-type="<?= htmlspecialchars($subscription['subscription_type'] ?? 'general') ?>">
+
                 <div class="subscription-main">
                     <span class="logo <?= !$hasLogo ? 'hideOnMobile' : '' ?>">
                         <?php
@@ -242,6 +245,7 @@ function printSubscriptions($subscriptions, $sort, $categories, $members, $i18n,
                         ?>
                     </span>
                     <span class="name <?= $hasLogo ? 'hideOnMobile' : '' ?>"><?= $subscription['name'] ?></span>
+                    <span class="komari-badge" data-komari-badge="<?= $subscription['id'] ?>" style="display:none;"></span>
                     <span class="cycle"
                         title="<?= $subscription['auto_renew'] ? translate("automatically_renews", $i18n) : translate("manual_renewal", $i18n) ?>">
                         <?php

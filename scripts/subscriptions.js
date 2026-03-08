@@ -40,6 +40,112 @@ function applySubscriptionTypePreset() {
   }
 }
 
+let komariAutoSyncTimer = null;
+
+function updateKomariStatusText(text, isError = false) {
+  const el = document.querySelector('#komari_sync_status');
+  if (!el) return;
+  el.textContent = text;
+  el.style.color = isError ? '#b42318' : '';
+}
+
+function getKomariBaseUrl() {
+  return (localStorage.getItem('wallos_komari_base_url') || '').trim();
+}
+
+function saveKomariBaseUrl() {
+  const input = document.querySelector('#komari_base_url');
+  if (!input) return;
+  const url = (input.value || '').trim().replace(/\/$/, '');
+  localStorage.setItem('wallos_komari_base_url', url);
+  updateKomariStatusText(url ? `Saved Komari URL: ${url}` : 'Komari URL cleared.');
+}
+
+function extractNodeList(payload) {
+  if (Array.isArray(payload)) return payload;
+  if (!payload || typeof payload !== 'object') return [];
+  if (Array.isArray(payload.data)) return payload.data;
+  if (Array.isArray(payload.nodes)) return payload.nodes;
+  if (payload.data && Array.isArray(payload.data.nodes)) return payload.data.nodes;
+  return [];
+}
+
+function parseNodeStatus(node) {
+  const onlineRaw = (node.online !== undefined)
+    ? node.online
+    : (node.is_online !== undefined)
+      ? node.is_online
+      : (node.status !== undefined)
+        ? String(node.status).toLowerCase() === 'online'
+        : (node.up !== undefined ? node.up : false);
+  const online = !!onlineRaw;
+  const cpu = node.cpu ?? node.cpu_usage ?? node.cpuUsed;
+  const mem = node.memory ?? node.mem_usage ?? node.memory_usage ?? node.ram;
+
+  const parts = [online ? 'Online' : 'Offline'];
+  if (cpu !== undefined && cpu !== null && cpu !== '') parts.push(`CPU ${Number(cpu).toFixed(1)}%`);
+  if (mem !== undefined && mem !== null && mem !== '') parts.push(`MEM ${Number(mem).toFixed(1)}%`);
+  return { online, text: parts.join(' · ') };
+}
+
+function renderKomariStatuses(nodes) {
+  const nodeMap = new Map();
+  nodes.forEach((node) => {
+    const keys = [node.uuid, node.id, node.name, node.hostname, node.host_name].filter(Boolean);
+    keys.forEach((k) => nodeMap.set(String(k).toLowerCase(), node));
+  });
+
+  document.querySelectorAll('.subscription[data-subscription-type="vps"]').forEach((el) => {
+    const externalId = (el.dataset.externalId || '').trim().toLowerCase();
+    const fallbackName = (el.dataset.name || '').trim().toLowerCase();
+    const node = nodeMap.get(externalId) || nodeMap.get(fallbackName);
+    const badge = el.querySelector('[data-komari-badge]');
+    if (!badge) return;
+
+    if (!node) {
+      badge.style.display = externalId ? 'inline-flex' : 'none';
+      badge.className = 'komari-badge';
+      badge.textContent = externalId ? 'Not matched' : '';
+      return;
+    }
+
+    const s = parseNodeStatus(node);
+    badge.style.display = 'inline-flex';
+    badge.className = `komari-badge ${s.online ? 'online' : 'offline'}`;
+    badge.textContent = s.text;
+  });
+}
+
+async function syncKomariNodes() {
+  const baseUrl = getKomariBaseUrl();
+  if (!baseUrl) {
+    updateKomariStatusText('Please set Komari URL first.', true);
+    return;
+  }
+
+  updateKomariStatusText('Syncing Komari nodes...');
+  try {
+    const resp = await fetch(`${baseUrl}/api/nodes`, { credentials: 'include' });
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    const payload = await resp.json();
+    const nodes = extractNodeList(payload);
+    renderKomariStatuses(nodes);
+    updateKomariStatusText(`Synced ${nodes.length} node(s) from Komari.`);
+  } catch (e) {
+    updateKomariStatusText(`Komari sync failed: ${e.message}. Check CORS/login/public API.`, true);
+  }
+}
+
+function setKomariAutoSync(enabled) {
+  if (komariAutoSyncTimer) {
+    clearInterval(komariAutoSyncTimer);
+    komariAutoSyncTimer = null;
+  }
+  if (enabled) {
+    komariAutoSyncTimer = setInterval(syncKomariNodes, 60000);
+  }
+}
+
 function resetForm() {
   const id = document.querySelector("#id");
   id.value = "";
@@ -625,6 +731,22 @@ document.addEventListener('DOMContentLoaded', function () {
   document.querySelector('#sort-options').addEventListener('focus', function () {
     isSortOptionsOpen = true;
   });
+
+  const komariInput = document.querySelector('#komari_base_url');
+  if (komariInput) {
+    komariInput.value = getKomariBaseUrl();
+  }
+
+  const autoSyncCheckbox = document.querySelector('#komari_auto_sync');
+  if (autoSyncCheckbox) {
+    autoSyncCheckbox.checked = localStorage.getItem('wallos_komari_auto_sync') === '1';
+    setKomariAutoSync(autoSyncCheckbox.checked);
+    autoSyncCheckbox.addEventListener('change', function () {
+      localStorage.setItem('wallos_komari_auto_sync', this.checked ? '1' : '0');
+      setKomariAutoSync(this.checked);
+      if (this.checked) syncKomariNodes();
+    });
+  }
 });
 
 function searchSubscriptions() {

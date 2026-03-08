@@ -151,6 +151,27 @@ $headerClass = count($subscriptions) > 0 ? "main-actions" : "main-actions hidden
   .logo-preview:after {
     content: '<?= translate('upload_logo', $i18n) ?>';
   }
+  .komari-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    margin-left: 8px;
+    border: 1px solid #d0d7de;
+    color: #57606a;
+  }
+  .komari-badge.online {
+    color: #0f5132;
+    border-color: #b7eb8f;
+    background: #f6ffed;
+  }
+  .komari-badge.offline {
+    color: #842029;
+    border-color: #f1aeb5;
+    background: #fff5f5;
+  }
 </style>
 
 <section class="contain">
@@ -264,6 +285,19 @@ $headerClass = count($subscriptions) > 0 ? "main-actions" : "main-actions hidden
     <small style="display:block; margin-top:8px; opacity:0.8;">CSV headers supported: name, price, currency_id, next_payment, cycle, frequency, provider, type/subscription_type, region, external_id, plan_details, notes, url, auto_renew, notify_days_before, category_id.</small>
   </div>
 
+  <div class="card" style="margin: 12px 0; padding: 12px; border-radius: 8px; border: 1px solid var(--colorBorder, #ddd);">
+    <h4 style="margin: 0 0 10px 0;">Komari VPS Sync (frontend-only)</h4>
+    <div class="inline" style="gap:8px; flex-wrap: wrap; align-items: end;">
+      <input type="url" id="komari_base_url" placeholder="https://komari.example.com" style="min-width:320px;" />
+      <button class="button secondary-button" type="button" onClick="saveKomariBaseUrl()">Save URL</button>
+      <button class="button secondary-button" type="button" onClick="syncKomariNodes()">Sync now</button>
+      <label style="display:flex; align-items:center; gap:6px;">
+        <input type="checkbox" id="komari_auto_sync" /> Auto refresh (60s)
+      </label>
+    </div>
+    <small id="komari_sync_status" style="display:block; margin-top:8px; opacity:0.8;">No sync yet.</small>
+  </div>
+
   <div class="subscriptions" id="subscriptions">
     <?php
     $formatter = new IntlDateFormatter(
@@ -305,6 +339,9 @@ $headerClass = count($subscriptions) > 0 ? "main-actions" : "main-actions hidden
       $print[$id]['url'] = $subscription['url'];
       $print[$id]['notes'] = $subscription['notes'];
       $print[$id]['replacement_subscription_id'] = $subscription['replacement_subscription_id'];
+      $print[$id]['external_id'] = $subscription['external_id'] ?? '';
+      $print[$id]['provider'] = $subscription['provider'] ?? '';
+      $print[$id]['subscription_type'] = $subscription['subscription_type'] ?? 'general';
 
       if (isset($settings['convertCurrency']) && $settings['convertCurrency'] === 'true' && $currencyId != $mainCurrencyId) {
         $print[$id]['price'] = getPriceConverted($print[$id]['price'], $currencyId, $db);

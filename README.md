@@ -62,6 +62,7 @@ Wallos is a powerful, open-source, and self-hostable web application designed to
 - Bulk CSV Import: Import many subscriptions at once (with duplicate handling: skip or update).
 - eSIM/VPS Fields: Track provider, region, line/instance ID, plan details, and subscription type presets.
 - Bulk Update Tools: Update reminders/category/renewal mode and append tags across many subscriptions.
+- Komari Sync (frontend-only): Pull VPS node status from Komari public/session API without storing credentials server-side.
 
 ## Demo
 
@@ -208,6 +209,22 @@ Type presets are included in the subscription form:
 - `General`
 - `eSIM`
 - `VPS`
+
+### Komari VPS sync (frontend-only)
+
+A Komari sync panel is available in Subscriptions page.
+
+- Set `Komari URL` (e.g. `https://komari.example.com`)
+- Click **Sync now** to fetch node status from `GET /api/nodes`
+- Optionally enable **Auto refresh (60s)**
+
+Matching strategy for VPS subscriptions:
+- `external_id` equals Komari `uuid`/`id`/`name`/`hostname`, OR
+- subscription name equals Komari `name`/`hostname`
+
+> Notes:
+> - This mode does not store Komari credentials server-side.
+> - If your Komari instance requires login, browser session and CORS must allow requests from your Wallos domain.
 
 ## Screenshots
 
